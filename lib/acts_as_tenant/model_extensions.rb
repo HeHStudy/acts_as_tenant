@@ -110,7 +110,7 @@ module ActsAsTenant
 
         reflect_on_all_associations(:belongs_to).each do |a|
           unless a == reflect_on_association(tenant) || polymorphic_foreign_keys.include?(a.foreign_key)
-            association_class =  a.options[:class_name].nil? ? a.name.to_s.classify.constantize : a.options[:class_name].constantize
+            association_class = (a.options[:class_name] || a.name).to_s.classify.constantize
             validates_each a.foreign_key.to_sym do |record, attr, value|
               primary_key = if association_class.respond_to?(:primary_key)
                               association_class.primary_key

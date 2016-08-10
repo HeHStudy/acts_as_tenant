@@ -169,7 +169,25 @@ describe ActsAsTenant do
   end
 
   describe "It should be possible to use aliased associations" do
-    it { expect(AliasedTask.create(:name => 'foo', :project_alias => @project2).valid?).to eq(true) }
+    let(:project) { Project.create!(:name => 'project') }
+    context 'when class_name is a string' do
+      it { expect(AliasedTask.create(:name => 'foo', :project_alias => project).valid?).to eq(true) }
+    end
+
+    context 'when class_name is a symbol' do
+      let(:aliased_symbol_task) do
+        class AliasedSymbolTask < ActiveRecord::Base
+          self.table_name = 'aliased_tasks'
+          belongs_to :project_alias, class_name: :project
+          acts_as_tenant(:account)
+        end
+
+        AliasedSymbolTask
+      end
+
+      it { expect{ aliased_symbol_task }.not_to raise_error }
+      it { expect{ aliased_symbol_task.create(name: 'foo', project_alias: project) }.to raise_error('uninitialized constant AliasedSymbolTask::project') }
+    end
   end
 
   describe "It should be possible to use associations with foreign_key from polymorphic" do
