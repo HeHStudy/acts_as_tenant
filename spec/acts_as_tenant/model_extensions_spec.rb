@@ -1,5 +1,5 @@
 require 'spec_helper'
-require "#{$orm}_models"
+require 'active_record_models'
 
 describe ActsAsTenant do
   after { ActsAsTenant.current_tenant = nil }
@@ -24,7 +24,7 @@ describe ActsAsTenant do
       @project = @account.projects.create!(:name => 'bar')
     end
 
-    it { expect {@project.account_id = @account.id + 1}.to raise_error }
+    it { expect {@project.account_id = @account.id + 1}.to raise_error(ActsAsTenant::Errors::TenantIsImmutable) }
   end
 
   describe 'setting tenant_id to the same value should not error' do
@@ -121,6 +121,32 @@ describe ActsAsTenant do
     end
 
     it { @project.account }
+  end
+
+  describe 'A tenant model with global records' do
+    before do
+      @account = Account.create!(:name => 'foo')
+      @project1 = GlobalProject.create!(:name => 'foobar global')
+      @project2 = GlobalProject.create!(:name => 'unaccessible project', :account => Account.create!)
+      ActsAsTenant.current_tenant = @account
+      @project3 = GlobalProject.create!(:name => 'foobar')
+    end
+
+    it 'should return two projects' do
+      expect(GlobalProject.all.count).to eq(2)
+    end
+
+    it 'should validate the project name against the global records too' do
+      expect(GlobalProject.new(:name => 'foobar').valid?).to be(false)
+      expect(GlobalProject.new(:name => 'foobar new').valid?).to be(true)
+      expect(GlobalProject.new(:name => 'foobar global').valid?).to be(false)
+      expect(@project1.valid?).to be(true)
+    end
+
+    it 'should add the model to ActsAsTenant.models_with_global_records' do
+      expect(ActsAsTenant.models_with_global_records.include?(GlobalProject)).to be(true)
+      expect(ActsAsTenant.models_with_global_records.include?(Project)).to be(false)
+    end
   end
 
   # Associations

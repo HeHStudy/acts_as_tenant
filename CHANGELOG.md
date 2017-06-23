@@ -1,6 +1,11 @@
-Master
+0.4.1
 ------
-* (Sub)domain lookup is no case insensitive
+* Removed (stale, no longer working) MongoDB support; moved code to separate branch
+* Added without_tenant option (see readme, thx duboff)
+
+0.4.0
+------
+* (Sub)domain lookup is no longer case insensitive
 * Added ability to use inverse_of (thx lowjoel)
 * Added ability to disable tenant checking for a block (thx duboff)
 * Allow for validation that associations belong to the tenant to reflect on associations which return an Array from `where` (thx ludamillion)
